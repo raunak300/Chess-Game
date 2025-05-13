@@ -11,7 +11,7 @@ const chess=new Chess();
 const path=require('path');
 
 const players={};
-const currentPlayer="w";
+let currentPlayer="w"; 
 
 app.set('view engine','ejs');
 
@@ -36,13 +36,14 @@ io.on("connection",function(uniqueSocket){
         uniqueSocket.emit("spectatorRole")
     }
     uniqueSocket.on("disconnect",function(){
+        console.log("disconnected")
         if(uniqueSocket.id==players.white){
             delete players.white;
         }
         else if(uniqueSocket.id==players.black){
             delete players.black; 
         }
-    })
+    }) 
     uniqueSocket.on("move",(move)=>{  //this comes from frontend
         try{
             if(chess.turn()==="w" && uniqueSocket.id!=players.white)return 
@@ -52,9 +53,13 @@ io.on("connection",function(uniqueSocket){
                 currentPlayer=chess.turn();
                 io.emit("move",move)
                 io.emit("boardstate",chess.fen())
+            }else{
+                console.log("invalid move", move);
+                uniqueSocket.emit("invalid-move",move);
             }
         }catch(err){
-            console.log(err)
+            console.log(err);
+            uniqueSocket.emit("Invalid move",move);
         }
     })
 
